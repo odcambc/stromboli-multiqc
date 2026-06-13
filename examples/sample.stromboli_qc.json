@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "sample": "EXP-NBD114_barcode23.subsample",
+  "reads_total": 10000,
+  "reads_with_barcode": 8210,
+  "n_clusters": 245,
+  "n_clusters_passing": 180,
+  "median_cluster_size": 6,
+  "n_variants": 150,
+  "n_flagged_merged": 5,
+  "n_flagged_mixed": 3,
+  "cluster_size_histogram": {"1": 30, "2": 45, "3-5": 80, "6-10": 60, "11+": 30},
+  "allele_fraction_histogram": {"0.2-0.4": 8, "0.4-0.6": 5, "0.6-0.85": 12, "0.85-1.0": 145}
+}
