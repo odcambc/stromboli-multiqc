@@ -4,16 +4,32 @@ build-backend = "hatchling.build"
 
 [project]
 name = "multiqc-stromboli"
-version = "0.1.0"
+dynamic = ["version"]
 description = "MultiQC plugin for the STROMBOLI barcode-variant mapping pipeline"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.9"
 authors = [{ name = "Chris Macdonald", email = "cbmacdo@gmail.com" }]
 keywords = ["multiqc", "bioinformatics", "DMS", "nanopore", "stromboli"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+]
 dependencies = ["multiqc>=1.20"]
 
 [project.urls]
+Homepage = "https://github.com/odcambc/stromboli-multiqc"
+Repository = "https://github.com/odcambc/stromboli-multiqc"
+Issues = "https://github.com/odcambc/stromboli-multiqc/issues"
 "STROMBOLI pipeline" = "https://github.com/odcambc/STROMBOLI"
 
 # MultiQC discovers the plugin through these entry points once it is installed.
@@ -26,5 +42,19 @@ before_config = "multiqc_stromboli.plugin:before_config"
 [dependency-groups]
 dev = ["pytest>=8"]
 
-# Project name normalizes to "multiqc_stromboli", which hatchling auto-detects as the
-# package, so no explicit build target config is needed.
+# Single-source the version from the package's __init__.py so a release is a one-line bump.
+[tool.hatch.version]
+path = "multiqc_stromboli/__init__.py"
+
+# The wheel is auto-detected from the normalized package name "multiqc_stromboli".
+# For the sdist, ship the package + the things that document/verify it, and keep
+# local-only config out of the published tarball.
+[tool.hatch.build.targets.sdist]
+include = [
+    "multiqc_stromboli",
+    "tests",
+    "examples",
+    "README.md",
+    "LICENSE",
+    "pyproject.toml",
+]
