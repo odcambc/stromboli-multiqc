@@ -9,15 +9,16 @@ variant-consequence breakdown, a barcode-clash plot, and distribution plots. (cu
 stats come from MultiQC's built-in cutadapt module.)
 
 > **Status: working.** Wired up against STROMBOLI's summary JSON
-> (`workflow/rules/scripts/write_qc_summary.py`, schema_version 3): the general-stats
-> table, a variant-consequence stacked bar (the DMS headline), the barcode-clash plot, and
-> four distribution plots — cluster size, allele fraction, variants per barcode, and
-> cluster purity. Counts that span orders of magnitude (cluster size, variants per barcode)
-> are emitted as exact `{value: count}` and binned by the plugin into data-driven,
-> log-spaced bins shared across the loaded samples, then overlaid one line per sample.
-> Bounded fractions (allele fraction, cluster purity) are pre-binned per-sample histograms
-> (grouped bars, with a Counts / Percentages toggle). See
-> `examples/sample.stromboli_qc.json` for the shape.
+> (`workflow/rules/scripts/write_qc_summary.py`, schema_version 5): the general-stats
+> table, variant-consequence and variant-type stacked bars (the DMS headline), the ORF
+> coverage profile, the barcode-clash plot, and distribution plots for cluster size, call
+> depth, allele fraction, variants per barcode, barcodes per variant, cluster purity, and
+> barcode length/GC. Counts that span orders of magnitude (cluster size, call depth,
+> variants per barcode, barcodes per variant) are emitted as exact `{value: count}` and
+> binned by the plugin into data-driven, log-spaced bins shared across the loaded samples,
+> then overlaid one line per sample. Bounded fractions (allele fraction, cluster purity,
+> barcode GC) are pre-binned per-sample histograms (grouped bars, with a Counts /
+> Percentages toggle). See `examples/sample.stromboli_qc.json` for the shape.
 
 ## Install
 
@@ -40,7 +41,7 @@ uv build           # build the wheel/sdist
 
 ## The QC summary contract
 
-The plugin consumes one JSON file per sample. The expected shape (schema_version 3) is
+The plugin consumes one JSON file per sample. The expected shape (schema_version 5) is
 documented by `examples/sample.stromboli_qc.json` and `multiqc_stromboli/parse.py`. The
 producer (STROMBOLI) owns this contract; when the format changes, bump `SCHEMA_VERSION`
 in both places. Files with an unexpected `schema_version` are parsed best-effort with a
@@ -49,3 +50,8 @@ warning.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Getting help
+
+For any issues, please open an issue on the GitHub repository. For
+questions or feedback, [email Chris](https://www.waymentsteelelab.org).

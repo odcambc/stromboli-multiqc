@@ -2,9 +2,9 @@
 
 Wires up file discovery, the general-statistics table, the variant-consequence,
 variant-type and clash bar plots, the ORF coverage profile, and the distribution plots
-(cluster size, allele fraction, variants per barcode, barcodes per variant, cluster
-purity, barcode length, barcode GC) from the per-sample QC summary JSON (emitted by
-STROMBOLI's write_qc_summary.py, schema_version 4). Targets MultiQC 1.x; the base-class
+(cluster size, call depth, allele fraction, variants per barcode, barcodes per variant,
+cluster purity, barcode length, barcode GC) from the per-sample QC summary JSON (emitted by
+STROMBOLI's write_qc_summary.py, schema_version 5). Targets MultiQC 1.x; the base-class
 import path has moved across versions, so it is imported defensively.
 """
 import logging
@@ -29,6 +29,7 @@ SCALAR_HEADERS = {
     "n_clusters_passing": {"title": "Clusters (pass)", "format": "{:,.0f}"},
     "median_cluster_size": {"title": "Median cluster", "format": "{:,.0f}"},
     "n_variants": {"title": "Variants", "format": "{:,.0f}"},
+    "median_call_depth": {"title": "Median call depth", "format": "{:,.0f}"},
     "n_positions_mutated": {"title": "Positions mut.", "format": "{:,.0f}"},
     "frac_orf_covered": {"title": "ORF covered", "format": "{:.1%}", "max": 1, "min": 0},
     "coverage_gini": {"title": "Cov. Gini", "format": "{:.2f}", "max": 1, "min": 0},
@@ -284,6 +285,36 @@ class MultiqcModule(BaseMultiqcModule):
                         "categories": True,
                         "xlab": "Cluster size (reads per barcode)",
                         "ylab": "Number of clusters",
+                    },
+                ),
+            )
+
+        # Call depth: reads backing each variant call (exact {depth: n_calls}), binned across
+        # the cohort like cluster sizes. Calls below ~10 reads are noise-dominated, so this is
+        # the FDR-relevant distribution — the median is also surfaced in general stats.
+        depth_counts = {
+            s: {int(depth): n for depth, n in d["call_depth_counts"].items()}
+            for s, d in data_by_sample.items()
+            if d.get("call_depth_counts")
+        }
+        if depth_counts:
+            _labels, depths = bin_cluster_sizes(depth_counts)
+            self.add_section(
+                name="Call depth distribution",
+                anchor="stromboli-call-depth",
+                description=(
+                    "Read support behind each variant call (cluster depth). Bins are scaled "
+                    "to the deepest call across the loaded samples. Calls below ~10 reads are "
+                    "noise-dominated; filter to a target FDR on depth. One line per sample."
+                ),
+                plot=linegraph.plot(
+                    depths,
+                    {
+                        "id": "stromboli_call_depth",
+                        "title": "STROMBOLI: call depth distribution",
+                        "categories": True,
+                        "xlab": "Cluster depth (reads backing the call)",
+                        "ylab": "Number of calls",
                     },
                 ),
             )

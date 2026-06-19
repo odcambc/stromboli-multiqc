@@ -4,12 +4,16 @@ Kept free of any MultiQC import so it can be unit-tested on its own. STROMBOLI w
 one summary file per sample (e.g. results/qc/{sample}.stromboli_qc.json); this module
 turns the JSON text into a validated dict.
 
-The expected shape (schema_version 4) is documented in examples/sample.stromboli_qc.json.
+The expected shape (schema_version 5) is documented in examples/sample.stromboli_qc.json.
 Single maintainer, so the "contract" is just this documented shape plus the version int:
 bump SCHEMA_VERSION here and in STROMBOLI together when the format changes.
 """
 import json
 
+# v5: per-call read support — call_depth_counts (exact {cluster_depth: n_calls}, binned by
+# the plugin like cluster sizes) and a median_call_depth scalar, from the cluster_depth column
+# STROMBOLI now writes on each variant call. Calls below ~10 reads are noise-dominated, so the
+# depth distribution is the FDR-relevant view of a run.
 # v4: barcode/variant coverage analytics — ORF positional coverage profile + evenness
 # (frac_orf_covered, coverage_gini), variant_types (SNV/MNV/indel), barcodes_per_variant_counts
 # (redundancy), and barcode composition (length, GC).
@@ -19,7 +23,7 @@ import json
 # v2: cluster sizes are emitted as exact {size: n_clusters} counts (cluster_size_counts)
 # rather than producer-side coarse bins, so the plugin can choose data-driven bins across
 # the whole cohort. Allele fraction stays pre-binned (bounded [0,1], not sample-dependent).
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 # Every scalar metric in the schema. The plugin styles a headline subset of these in
 # the general-statistics table (see SCALAR_HEADERS in stromboli.py); all are kept in the
@@ -32,6 +36,7 @@ SCALAR_FIELDS = [
     "median_cluster_size",
     "n_variants",
     "n_distinct_variants",
+    "median_call_depth",
     "n_positions_mutated",
     "n_codons_covered",
     "orf_codons",
@@ -46,13 +51,15 @@ SCALAR_FIELDS = [
     "n_flagged_ambiguous",
 ]
 
-# Distribution metrics rendered as plots. cluster_size_counts, variants_per_barcode_counts,
-# barcodes_per_variant_counts and barcode_length_counts are exact {key: n} (the plugin bins
-# the first three; length is plotted at integer resolution). allele_fraction_histogram,
-# cluster_purity_histogram and barcode_gc_histogram are pre-binned. variant_consequences and
-# variant_types are categorical {class: n}. orf_coverage_profile is {codon_window: n}.
+# Distribution metrics rendered as plots. cluster_size_counts, call_depth_counts,
+# variants_per_barcode_counts, barcodes_per_variant_counts and barcode_length_counts are exact
+# {key: n} (the plugin bins the first four; length is plotted at integer resolution).
+# allele_fraction_histogram, cluster_purity_histogram and barcode_gc_histogram are pre-binned.
+# variant_consequences and variant_types are categorical {class: n}. orf_coverage_profile is
+# {codon_window: n}.
 HISTOGRAM_FIELDS = [
     "cluster_size_counts",
+    "call_depth_counts",
     "allele_fraction_histogram",
     "variants_per_barcode_counts",
     "barcodes_per_variant_counts",

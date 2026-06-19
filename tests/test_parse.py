@@ -6,6 +6,8 @@ import warnings
 import pytest
 
 from multiqc_stromboli.parse import (
+    HISTOGRAM_FIELDS,
+    SCALAR_FIELDS,
     SCHEMA_VERSION,
     SchemaVersionWarning,
     bin_cluster_sizes,
@@ -22,6 +24,16 @@ def test_parses_example():
     assert sample == "EXP-NBD114_barcode23.subsample"
     assert data["schema_version"] == SCHEMA_VERSION
     assert data["n_flagged_mixed"] == 3
+
+
+def test_v5_call_depth_fields_present():
+    # The v5 per-call read-support metrics are registered and carried in the example.
+    assert "median_call_depth" in SCALAR_FIELDS
+    assert "call_depth_counts" in HISTOGRAM_FIELDS
+    _sample, data = parse_stromboli_qc(open(EXAMPLE).read())
+    assert data["median_call_depth"] == 14
+    # exact {depth: n_calls}; binning is exercised in the cluster-size tests (same helper).
+    assert sum(data["call_depth_counts"].values()) == data["n_variants"]
 
 
 def test_missing_sample_raises():
