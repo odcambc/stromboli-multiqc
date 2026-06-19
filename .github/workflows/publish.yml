@@ -1,0 +1,62 @@
+name: Publish to PyPI
+
+# Publishes when you create a GitHub Release (Releases → Draft a new release →
+# pick a tag like v0.1.0 → Publish). Clicking "Publish release" is the gate;
+# a stray tag push alone won't ship.
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    name: Build distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Run tests
+        run: uv run --group dev pytest -q
+
+      - name: Build wheel + sdist
+        run: uv build
+
+      - name: Check metadata
+        run: uvx twine check dist/*
+
+      - name: Verify tag matches package version
+        run: |
+          pkg_version="v$(uv run python -c 'import multiqc_stromboli; print(multiqc_stromboli.__version__)')"
+          tag="${GITHUB_REF_NAME}"
+          if [ "$pkg_version" != "$tag" ]; then
+            echo "::error::Release tag '$tag' does not match package version '$pkg_version'."
+            echo "Bump __version__ in multiqc_stromboli/__init__.py to match the tag, or retag."
+            exit 1
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/multiqc-stromboli/
+    permissions:
+      id-token: write  # OIDC token for trusted publishing — no API token needed
+    steps:
+      - name: Download built distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@release/v1
