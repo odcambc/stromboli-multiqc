@@ -25,7 +25,7 @@ pytestmark = pytest.mark.skipif(
 REPORT_NAME = "report"
 DATA_DIR = REPORT_NAME + "_data"
 
-# Every plot section the module renders for a schema_version 4 summary. Asserting the full
+# Every plot section the module renders for a schema_version 5 summary. Asserting the full
 # set guards against a section silently dropping out (e.g. a renamed field or a plot that
 # errors and is skipped). Keep in step with MultiqcModule's add_section() ids.
 EXPECTED_PLOT_IDS = [
@@ -34,6 +34,7 @@ EXPECTED_PLOT_IDS = [
     "stromboli_orf_coverage",
     "stromboli_clashes",
     "stromboli_cluster_sizes",
+    "stromboli_call_depth",
     "stromboli_allele_fractions",
     "stromboli_variants_per_barcode",
     "stromboli_barcodes_per_variant",
